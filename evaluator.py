@@ -17,3 +17,22 @@ def evaluate_hand(cards):
         return 2
     elif counts == [1, 1, 1, 1, 1]:
         return 1
+
+def is_flush(cards):
+    suits = [card.suit for card in cards]
+    return len(set(suits)) == 1
+
+def is_straight(cards):
+    rank_values = {"2":2, "3":3, "4":4, "5":5, "6":6, "7":7, "8":8, "9":9, "10":10, "J":11, "Q":12, "K":13, "A":14}
+    ranks = sorted(set(rank_values[card.rank] for card in cards))
+
+    if set(ranks) == {14, 2, 3, 4, 5}:
+        return True
+
+    if len(set(ranks)) != 5:
+        return False
+
+    return ranks[-1] - ranks[0] == 4
+
+
+
