@@ -34,5 +34,6 @@ def is_straight(cards):
 
     return ranks[-1] - ranks[0] == 4
 
-
+def is_straight_flush(cards):
+    return is_flush(cards) and is_straight(cards)
 
