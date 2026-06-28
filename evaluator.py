@@ -5,10 +5,18 @@ def evaluate_hand(cards):
     ranks_count = Counter(ranks)
 
     counts = sorted(ranks_count.values(), reverse=True)
-    if counts == [4, 1]:
+    if is_royal_flush(cards):
+        return 10
+    elif is_straight_flush(cards):
+        return 9
+    elif counts == [4, 1]:
         return 8
     elif counts == [3, 2]:
         return 7
+    elif is_flush(cards):
+        return 6
+    elif is_straight(cards):
+        return 5
     elif counts == [3, 1, 1]:
         return 4
     elif counts == [2, 2, 1]:
