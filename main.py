@@ -8,3 +8,18 @@ players = [Player("Player1", [], 1000), Player("Player2", [], 1000), Player("Pla
 
 for player in players:
     player.hole_cards = [my_deck.deal(), my_deck.deal()]
+
+community_cards = []
+
+#burn 1 card + flop
+my_deck.deal()
+for _ in range(3):
+    community_cards.append(my_deck.deal())
+
+#burn 1 card + turn
+my_deck.deal()
+community_cards.append(my_deck.deal())
+
+#burn 1 card + river
+my_deck.deal()
+community_cards.append(my_deck.deal())
