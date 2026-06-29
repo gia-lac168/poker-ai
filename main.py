@@ -23,3 +23,13 @@ community_cards.append(my_deck.deal())
 #burn 1 card + river
 my_deck.deal()
 community_cards.append(my_deck.deal())
+
+for player in players:
+    print("Please select an action:")
+    print("1. Fold")
+    print("2. Call")
+    decision = input("Your decision?: ")
+    if decision == "1":
+        print("\nFold")
+    else:
+        print("\nCall")
