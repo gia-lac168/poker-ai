@@ -24,12 +24,16 @@ community_cards.append(my_deck.deal())
 my_deck.deal()
 community_cards.append(my_deck.deal())
 
+pot = 0
 for player in players:
     print("Please select an action:")
     print("1. Fold")
     print("2. Call")
     decision = input("Your decision?: ")
     if decision == "1":
-        print("\nFold")
+        print("Fold\n")
+        player.is_folded = True
     else:
-        print("\nCall")
+        print("Call\n")
+        player.chips -= 10
+        pot += 10
