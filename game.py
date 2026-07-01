@@ -1,4 +1,6 @@
 from deck import Deck
+from evaluator import evaluate_hand
+from itertools import combinations
 
 class Game:
     def __init__(self, players):
@@ -85,6 +87,31 @@ class Game:
                     player.is_all_in = True
                     print("All in!\n")
 
+    def showdown(self):
+        winner = None
+        highest_player_score = -1
+
+        for player in self.players:
+            if player.is_folded:
+                continue
+            all_cards = self.community_cards + player.hole_cards
+            all_5_cards_hand = list(combinations(all_cards, 5))
+            player_best_hand = None
+            player_best_score = -1
+
+            for hand in all_5_cards_hand:
+                score = evaluate_hand(hand)
+
+                if score > player_best_score:
+                    player_best_score = score
+                    player_best_hand = hand
+
+            if player_best_score > highest_player_score:
+                winner = player.name
+                highest_player_score = player_best_score
+
+        print(f"{winner} won this round!")
+
     def play_hand(self):
         self.deal_hole_cards()
         self.highest_bet = 10  # starting bet (big blind placeholder)
@@ -96,4 +123,5 @@ class Game:
         self.betting_round()
         self.deal_community_cards() #river
         self.betting_round()
+        self.showdown()
 
