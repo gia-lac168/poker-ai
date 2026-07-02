@@ -1,6 +1,7 @@
 from deck import Deck
 from evaluator import evaluate_hand
 from itertools import combinations
+from montecarlo import estimate_win_probability
 
 class Game:
     def __init__(self, players):
@@ -25,10 +26,12 @@ class Game:
             self.community_cards.append(self.deck.deal())
         self.current_round += 1
 
-    def betting_round(self):
+    def betting_round(self, starting_bet=0):
         # reset bets for new round
         for player in self.players:
             player.total_bet_this_round = 0
+        self.highest_bet = starting_bet
+        acted = set()
 
         # show game state
         print("\n========== GAME STATE ==========")
@@ -47,36 +50,55 @@ class Game:
                 if player.is_folded or player.is_all_in:  # skip player that is already folded or all-in
                     continue
 
-                if player.total_bet_this_round == self.highest_bet:  # skip player that is already match the bet
+                if player.name in acted and player.total_bet_this_round == self.highest_bet:  # skip player that is already match the bet
                     continue
 
+                #player's information
                 print(f"{player.name}'s turn")
                 print(f"Your hole cards: {player.hole_cards}")
                 print(f"Your chips: {player.chips}")
+
+                #Estimated win probability
+                prob = estimate_win_probability(player.hole_cards, self.community_cards, len([p for p in self.players if not p.is_folded and p != player]), )
+                print(f"Estimated win probability: {prob:.1%}")
+
+                #Option menu
                 print("Please select an action:")
                 print("1. Fold")
-                print("2. Call")
+                if self.highest_bet == 0:
+                    print("2. Check")
+                else:
+                    print("2. Call")
                 print("3. Raise")
                 decision = input("Your decision?: ")
+
                 if decision == "1": #fold
-                    print("Fold\n")
+                    print(f"{player.name} folded\n")
                     player.is_folded = True
 
                 elif decision == "2": #call
-                    print("Call\n")
+                    if self.highest_bet == 0:
+                        print(f"{player.name} check\n")
+                    else:
+                        print(f"{player.name} call\n")
                     amount_to_call = min(self.highest_bet - player.total_bet_this_round, player.chips)
                     player.chips -= amount_to_call
                     self.pot += amount_to_call
                     player.total_bet_this_round += amount_to_call
 
                 elif decision == "3":
-                    print("Raise")
+                    print(f"{player.name} raise\n")
                     player.amount_bet = int(input("How much would you like to raise to?: "))
                     print("")
-                    while player.amount_bet > player.chips + player.total_bet_this_round:
-                        print("You don't have enough chips! Please try again.")
+
+                    #check if the raise is valid
+                    while player.amount_bet <= self.highest_bet or player.amount_bet > player.chips + player.total_bet_this_round:
+                        if player.amount_bet <= self.highest_bet:
+                            print(f"Raise must be higher than current bet of {self.highest_bet}. Please try again.")
+                        else:
+                            print("You don't have enough chips! Please try again.")
                         player.amount_bet = int(input("How much would you like to raise to?: "))
-                        print("")
+
                     someone_raised = True
                     self.highest_bet = player.amount_bet
                     player.chips -= self.highest_bet - player.total_bet_this_round
@@ -87,9 +109,20 @@ class Game:
                     player.is_all_in = True
                     print("All in!\n")
 
+                acted.add(player.name)
+
+                if len(self.active_players()) == 1:
+                    winner = self.active_players()[0]
+                    print(f"\n{winner.name} wins the pot of {self.pot} chips (everyone else folded)!")
+                    winner.chips += self.pot
+                    return True  # signal that hand is over
+
+    def active_players(self):
+        return [p for p in self.players if not p.is_folded]
+
     def showdown(self):
         winner = None
-        highest_player_score = -1
+        highest_player_score = (-1,)
 
         for player in self.players:
             if player.is_folded:
@@ -97,7 +130,7 @@ class Game:
             all_cards = self.community_cards + player.hole_cards
             all_5_cards_hand = list(combinations(all_cards, 5))
             player_best_hand = None
-            player_best_score = -1
+            player_best_score = (-1,)
 
             for hand in all_5_cards_hand:
                 score = evaluate_hand(hand)
@@ -114,14 +147,17 @@ class Game:
 
     def play_hand(self):
         self.deal_hole_cards()
-        self.highest_bet = 10  # starting bet (big blind placeholder)
-        self.betting_round() #pre-flop
+        if self.betting_round(starting_bet=10): # pre-flop # TODO: replace starting_bet with proper blind system later
+            return
         self.current_round += 1
         self.deal_community_cards() #flop
-        self.betting_round()
+        if self.betting_round():
+            return
         self.deal_community_cards() #turn
-        self.betting_round()
+        if self.betting_round():
+            return
         self.deal_community_cards() #river
-        self.betting_round()
+        if self.betting_round():
+            return
         self.showdown()
 
