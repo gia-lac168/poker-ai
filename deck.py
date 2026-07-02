@@ -6,6 +6,9 @@ class Card:
     def __repr__(self):
         return f'{self.rank}{self.suit}'
 
+    def __eq__(self, other):
+        return self.rank == other.rank and self.suit == other.suit
+
 import random
 
 class Deck:
