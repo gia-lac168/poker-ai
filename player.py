@@ -8,3 +8,4 @@ class Player:
         self.is_folded = False
         self.is_all_in = False
         self.is_bot = is_bot
+        self.has_acted = False
