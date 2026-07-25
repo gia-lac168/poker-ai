@@ -29,7 +29,12 @@ def play():
     if game is None:
         return redirect(url_for("index"))
     current_player = game.get_current_player()
-    return render_template("index.html", game=game, current_player=current_player)
+    win_prob = None
+    if current_player and not current_player.is_bot:
+        from montecarlo import estimate_win_probability
+        active_opponents = len([p for p in game.players if not p.is_folded and p != current_player])
+        win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents):.1%}"
+    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob)
 
 @app.route("/action", methods=['POST'])
 def action():

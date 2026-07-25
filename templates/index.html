@@ -5,7 +5,100 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
+{% if game is none %}
+<div class="SET UP">
     <h1>Poker AI 🃏</h1>
     <p>Welcome to the Poker AI game!</p>
+    <p>How many bots you want to play against?</p>
+    <form action="/start" method="POST">
+        <input type="number" name="num_bots" value="2" min="1" max="5">
+        <button type="submit"> START GAME! </button>
+    </form>
+</div>
+
+{% else %}
+<div class="game">
+
+    <!-- Community cards -->
+    <div class="community">
+        {% if game.community_cards%}
+            <div class="cards">
+                {% for card in game.community_cards %}
+                    <span class="card">{{ card }}</span>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p> No community cards yet (pre-flop)</p>
+        {% endif %}
+        <p>💰 Pot: {{ game.pot }} chips</p>
+        <p>Current bet: {{ game.highest_bet }} chips</p>
+    </div>
+
+    <!-- Players -->
+    <div class="players">
+        {% for player in game.players %}
+        <div class="player {% if player.is_folded %}folded{% endif %}">
+            <h3>
+                {{ player.name }}
+                {% if player.is_bot %} 🤖{% else %}👤{% endif %}
+            </h3>
+            <p> Chips: {{ player.chips }}</p>
+            {% if player.is_bot %}
+                <p>Cards: [hidden] [hidden]</p>
+            {% else %}
+                <p> Cards:
+                    {% for card in player.hole_cards %}
+                        <span class="card"> {{ card }} </span>
+                    {% endfor %}
+                </p>
+            {% endif %}
+            {% if player.is_folded %}<p>❌ FOLDED</p>{% endif %}
+            {% if player.is_all_in %}<p>⚡ ALL IN</p>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Action Buttons -->
+    {% if current_player and not current_player.is_bot %}
+    <div class="action">
+        <h3> Your turn </h3>
+        <p> Win Probability:
+            <span id="prob" style="display:none"> {{ win_prob }} </span>
+            <button onclick="toggleProb()"> Show/Hide AI insight </button>
+        </p>
+
+        <form action="/action" method="POST">
+            <button type="submit" name="action" value="fold"> Fold </button>
+            {% if game.highest_bet == 0 %}
+                <button type="submit" name="action" value="call"> Check </button>
+            {% else %}
+                <button type="submit" name="action" value="call"> Call {{ game.highest_bet }} chips</button>
+            {% endif %}
+            <input type="number" name="action" placeholder="Raise amount" min="{{ game.highest_bet }} + 1">
+            <button type="submit" name="action" value="raise"> Raise </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="actions">
+        <p> ⏳ Waiting for {{ current_player.name if current_player else 'showdown' }}...</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function toggleProb(){
+        var prob = document.getElementById("prob");
+        if (prob.style.display == "none"){
+            prob.style.display = "inline";
+        } else {
+            prob.style.display = "none";
+        }
+    }
+</script>
+
+{% endif %}
+
 </body>
 </html>
