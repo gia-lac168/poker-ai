@@ -2,7 +2,7 @@ from montecarlo import estimate_win_probability
 
 def bot_action(player, highest_bet, community_cards, active_opponents, pot):
 
-    prob = estimate_win_probability(player.hole_cards, community_cards, active_opponents)
+    prob = estimate_win_probability(player.hole_cards, community_cards, active_opponents, num_simulations=2000)
 
     amount_to_call = highest_bet - player.total_bet_this_round
     if amount_to_call > 0:

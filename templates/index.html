@@ -19,6 +19,7 @@
 
 {% else %}
 <div class="game">
+    <h2>{{ current_round_name }}</h2>
 
     <!-- Community cards -->
     <div class="community">
@@ -75,17 +76,33 @@
             {% else %}
                 <button type="submit" name="action" value="call"> Call {{ game.highest_bet }} chips</button>
             {% endif %}
-            <input type="number" name="action" placeholder="Raise amount" min="{{ game.highest_bet }} + 1">
+            <input type="number" name="amount" placeholder="Raise amount" min="{{ game.highest_bet + 1 }}">
             <button type="submit" name="action" value="raise"> Raise </button>
         </form>
     </div>
+
     {% else %}
-    <div class="actions">
-        <p> ⏳ Waiting for {{ current_player.name if current_player else 'showdown' }}...</p>
-    </div>
+        {% if winner_message %}
+            <div class="winner">
+                <h2>🏆 {{ winner_message }}</h2>
+                <form action="/start" method="POST">
+                <input type="hidden" name="num_bots" value="2">
+                <button type="submit">Play Again</button>
+        </form>
+            </div>
+        {% elif current_player and current_player.is_bot %}
+            <p>⏳ Waiting for {{ current_player.name }}...</p>
+        {% endif %}
+
     {% endif %}
 
 </div>
+
+{% if current_player and current_player.is_bot %}
+<script>
+    setTimeout(function(){ location.reload(); }, 1000);
+</script>
+{% endif %}
 
 <script>
     function toggleProb(){
@@ -98,7 +115,15 @@
     }
 </script>
 
+<div class="log">
+    <h3>Action Log</h3>
+    {% for msg in action_log %}
+        <p>{{ msg }}</p>
+    {% endfor %}
+</div>
+
 {% endif %}
+
 
 </body>
 </html>

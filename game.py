@@ -14,6 +14,7 @@ class Game:
         self.dealer = 0 #index of dealer position
         self.small_blind = small_blind
         self.big_blind = big_blind
+        self.game_over = False
 
     def deal_hole_cards(self):
         for player in self.players:
@@ -49,23 +50,6 @@ class Game:
 
     def active_players(self):
         return [p for p in self.players if not p.is_folded]
-
-    def showdown(self):
-        winner = None
-        highest_player_score = (-1,)
-
-        for player in self.players:
-            if player.is_folded:
-                continue
-            all_cards = self.community_cards + player.hole_cards
-            player_best_score = max(evaluate_hand(list(hand)) for hand in combinations(all_cards, 5))
-
-            if player_best_score > highest_player_score:
-                winner = player
-                highest_player_score = player_best_score
-
-        winner.chips += self.pot
-        return f"{winner.name} wins {self.pot} chips!"
 
     def start_hand(self):
         self.community_cards = []
@@ -103,15 +87,15 @@ class Game:
             player.is_folded = True
             message = f"{player.name} folded\n"
 
-        elif action == "call":
+        elif action == "call" or action == "check":
             amount_to_call = min(self.highest_bet - player.total_bet_this_round, player.chips)
             player.chips -= amount_to_call
             self.pot += amount_to_call
             player.total_bet_this_round += amount_to_call
             if self.highest_bet == 0:
-                message = f"{player.name} check\n"
+                message = f"{player.name} check"
             else:
-                message = f"{player.name} called {amount_to_call}\n"
+                message = f"{player.name} called {amount_to_call}"
 
         elif action == "raise":
             self.highest_bet = amount
@@ -131,14 +115,19 @@ class Game:
             player.chips = 0
             player.is_all_in = True
             message += "All in!\n"
+
         return message
 
     def advance_round(self):
         active = self.active_players()
         if len(active) == 1:
-            winner = active[0]
-            winner.chips += self.pot
-            return "winner", f"{winner.name} wins {self.pot} chips!"
+            if not self.game_over:
+                self.game_over = True
+                winner = active[0]
+                winnings = self.pot
+                winner.chips += winnings
+                self.pot = 0
+                return "winner", f"{winner.name} wins {winnings} chips!"
 
         # reset betting for new street
         self.highest_bet = 0
@@ -161,4 +150,21 @@ class Game:
             result = self.showdown()
             return "winner", result
 
+    def showdown(self):
+        winner = None
+        highest_player_score = (-1,)
 
+        for player in self.players:
+            if player.is_folded:
+                continue
+            all_cards = self.community_cards + player.hole_cards
+            player_best_score = max(evaluate_hand(list(hand)) for hand in combinations(all_cards, 5))
+
+            if player_best_score > highest_player_score:
+                winner = player
+                highest_player_score = player_best_score
+
+        winnings = self.pot
+        winner.chips += winnings
+        self.pot = 0
+        return f"{winner.name} wins {winnings} chips!"

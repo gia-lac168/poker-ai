@@ -6,6 +6,8 @@ app = Flask(__name__)
 app.secret_key = "poker-ai-secret-key"
 
 game: Game = None
+action_log = []
+winner_message = None
 
 @app.route("/")
 def index():
@@ -13,7 +15,9 @@ def index():
 
 @app.route("/start", methods=['POST'])
 def start():
-    global game
+    global game, action_log, winner_message
+    action_log = []
+    winner_message = None
     num_bots = int(request.form.get("num_bots", 2))
     players = [Player("You", [], 1000)]
 
@@ -30,24 +34,31 @@ def play():
         return redirect(url_for("index"))
     current_player = game.get_current_player()
     win_prob = None
+    round_names = {0: "Pre-flop", 1: "Flop", 2: "Turn", 3: "River", 4: "Showdown"}
+    current_round_name = round_names.get(game.current_round, "Pre-flop")
     if current_player and not current_player.is_bot:
         from montecarlo import estimate_win_probability
         active_opponents = len([p for p in game.players if not p.is_folded and p != current_player])
-        win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents):.1%}"
-    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob)
+        win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents, num_simulations=2000):.1%}"
+    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob, current_round_name=current_round_name, action_log=action_log, winner_message=winner_message)
 
 @app.route("/action", methods=['POST'])
 def action():
-    global game
+    global game, action_log, winner_message
     if game is None:
         return redirect(url_for("index"))
-    action = request.form.get("action")
-    amount = int(request.form.get("amount", 0))
+    player_action = request.form.get("action")
+    amount_str = request.form.get("amount", "0")
+    amount = int(amount_str) if amount_str.strip() else 0
+
+    if player_action == "raise" and amount <= game.highest_bet:
+        player_action = "call"  # fallback if raise amount invalid
 
     #get current player
     player = game.get_current_player()
     if player and not player.is_bot:
-        game.process_action(player, action, amount)
+        msg = game.process_action(player, player_action, amount)
+        action_log.append(msg)
 
     # process bot actions until it's human's turn or round is over
     while True:
@@ -55,20 +66,60 @@ def action():
         if current is None:
             # round is over, advance to next street
             status, message = game.advance_round()
+            action_log.append(message)
             if status == "winner":
+                winner_message = message
                 return redirect(url_for("play"))
+            elif status == "continue":
+                active_can_act = [p for p in game.players if not p.is_folded and not p.is_all_in]
+                if len(active_can_act) == 0:
+                    continue  # everyone all-in, keep advancing
+                else:
+                    break  # someone can act, stop
 
         elif current.is_bot:
             from ai import bot_action
             current_pot = game.pot + sum(p.total_bet_this_round for p in game.players)
             active_opponents = len([p for p in game.players if not p.is_folded and p != current])
             bot_act, bot_amount = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
-            game.process_action(current, bot_act.lower(), bot_amount)
+            msg = game.process_action(current, bot_act.lower(), bot_amount)
+            action_log.append(msg)
         else:
             # human's turn — stop and show the page
             break
 
     return redirect(url_for("play"))
+
+@app.route("/advance", methods=['POST']) #for bots' action when player folded
+def advance():
+    global game, action_log, winner_message
+    if game is None:
+        return redirect(url_for("index"))
+
+    while True:
+        current = game.get_current_player()
+        if current is None:
+            status, message = game.advance_round()
+            action_log.append(message)
+            if status == "winner":
+                winner_message = message
+                break
+            active_can_act = [p for p in game.players if not p.is_folded and not p.is_all_in]
+            if len(active_can_act) == 0:
+                continue
+            else:
+                break
+        elif current.is_bot:
+            from ai import bot_action
+            current_pot = game.pot + sum(p.total_bet_this_round for p in game.players)
+            active_opponents = len([p for p in game.players if not p.is_folded and p != current])
+            bot_act, bot_amount = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
+            msg = game.process_action(current, bot_act.lower(), bot_amount)
+            action_log.append(msg)
+        else:
+            break
+
+    return "", 204  # return empty response
 
 if __name__ == '__main__':
     app.run(debug=True)
