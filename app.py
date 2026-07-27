@@ -40,7 +40,7 @@ def play():
         from montecarlo import estimate_win_probability
         active_opponents = len([p for p in game.players if not p.is_folded and p != current_player])
         win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents, num_simulations=2000):.1%}"
-    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob, current_round_name=current_round_name, action_log=action_log, winner_message=winner_message)
+    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob, current_round_name=current_round_name, action_log=action_log, winner_message=winner_message, game_over=game.game_over)
 
 @app.route("/action", methods=['POST'])
 def action():

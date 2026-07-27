@@ -26,7 +26,9 @@
         {% if game.community_cards%}
             <div class="cards">
                 {% for card in game.community_cards %}
-                    <span class="card">{{ card }}</span>
+                    <span class="card {% if '♥' in card|string or '♦' in card|string %}red-card{% endif %}">
+                          {{ card }}
+                    </span>
                 {% endfor %}
             </div>
         {% else %}
@@ -50,7 +52,9 @@
             {% else %}
                 <p> Cards:
                     {% for card in player.hole_cards %}
-                        <span class="card"> {{ card }} </span>
+                        <span class="card {% if '♥' in card|string or '♦' in card|string %}red-card{% endif %}">
+                          {{ card }}
+                        </span>
                     {% endfor %}
                 </p>
             {% endif %}
@@ -61,9 +65,9 @@
     </div>
 
     <!-- Action Buttons -->
-    {% if current_player and not current_player.is_bot %}
+    {% if current_player and not current_player.is_bot and not game_over%}
     <div class="action">
-        <h3> Your turn </h3>
+        <h3> Your turn! </h3>
         <p> Win Probability:
             <span id="prob" style="display:none"> {{ win_prob }} </span>
             <button onclick="toggleProb()"> Show/Hide AI insight </button>
