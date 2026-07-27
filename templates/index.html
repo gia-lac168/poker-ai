@@ -7,7 +7,7 @@
 <body>
 
 {% if game is none %}
-<div class="SET UP">
+<div class="setup">
     <h1>Poker AI 🃏</h1>
     <p>Welcome to the Poker AI game!</p>
     <p>How many bots you want to play against?</p>
@@ -98,9 +98,12 @@
 
 </div>
 
-{% if current_player and current_player.is_bot %}
+{% if current_player and current_player.is_bot and not winner_message %}
 <script>
-    setTimeout(function(){ location.reload(); }, 1000);
+    setTimeout(function(){
+        fetch('/advance', {method: 'POST'})
+            .then(() => location.reload());
+    }, 1000);
 </script>
 {% endif %}
 

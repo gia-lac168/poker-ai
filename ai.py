@@ -11,16 +11,18 @@ def bot_action(player, highest_bet, community_cards, active_opponents, pot):
         pot_odds = 0  # free check, no pot odds needed
 
     if prob > 0.7:
-        raise_amount = min(int(pot * 0.75), player.chips + player.total_bet_this_round)
+        raise_amount = int(pot * 0.75)
         raise_amount = max(raise_amount, highest_bet + 1)
+        raise_amount = min(raise_amount, player.chips + player.total_bet_this_round)
         if raise_amount <= highest_bet:  # if it can't raise meaningfully, just call
             action = ("Call", 0)
         else:
             action = ("Raise", raise_amount)
     elif prob > pot_odds:
         if prob >= 0.5:
-            raise_amount = min(int(pot * 0.5), player.chips + player.total_bet_this_round)
+            raise_amount = int(pot * 0.5)
             raise_amount = max(raise_amount, highest_bet + 1)
+            raise_amount = min(raise_amount, player.chips + player.total_bet_this_round)
             if raise_amount <= highest_bet:  # can't raise meaningfully, just call
                 action = ("Call", 0)
             else:

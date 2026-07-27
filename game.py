@@ -85,7 +85,7 @@ class Game:
 
         if action == "fold":
             player.is_folded = True
-            message = f"{player.name} folded\n"
+            message = f"{player.name} folded"
 
         elif action == "call" or action == "check":
             amount_to_call = min(self.highest_bet - player.total_bet_this_round, player.chips)
@@ -107,27 +107,30 @@ class Game:
             for p in self.players:
                 if p != player:
                     p.has_acted = False
-            message = f"{player.name} raise to {amount}\n"
+            message = f"{player.name} raise to {amount}"
 
         player.has_acted = True
 
         if player.chips <= 0:
             player.chips = 0
             player.is_all_in = True
-            message += "All in!\n"
+            message += "- All in!\n"
 
         return message
 
     def advance_round(self):
+        # stop if game is already over
+        if self.game_over:
+            return "winner", "Game already over"
+
         active = self.active_players()
         if len(active) == 1:
-            if not self.game_over:
-                self.game_over = True
-                winner = active[0]
-                winnings = self.pot
-                winner.chips += winnings
-                self.pot = 0
-                return "winner", f"{winner.name} wins {winnings} chips!"
+            self.game_over = True
+            winner = active[0]
+            winnings = self.pot
+            winner.chips += winnings
+            self.pot = 0
+            return "winner", f"{winner.name} wins {winnings} chips!"
 
         # reset betting for new street
         self.highest_bet = 0
@@ -167,4 +170,5 @@ class Game:
         winnings = self.pot
         winner.chips += winnings
         self.pot = 0
+        self.game_over = True
         return f"{winner.name} wins {winnings} chips!"
