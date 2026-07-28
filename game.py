@@ -9,6 +9,7 @@ class Game:
         self.deck.shuffle()
         self.community_cards = []
         self.pot = 0
+        self.last_pot = 0
         self.highest_bet = 0
         self.current_round = 0
         self.dealer = 0 #index of dealer position
@@ -54,8 +55,10 @@ class Game:
     def start_hand(self):
         self.community_cards = []
         self.pot = 0
+        self.last_pot = 0
         self.current_round = 0
         self.highest_bet = 0
+        self.game_over = False
         self.deck = Deck()
         self.deck.shuffle()
 
@@ -129,6 +132,7 @@ class Game:
             winner = active[0]
             winnings = self.pot
             winner.chips += winnings
+            self.last_pot = self.pot
             self.pot = 0
             return "winner", f"{winner.name} wins {winnings} chips!"
 
@@ -169,6 +173,7 @@ class Game:
 
         winnings = self.pot
         winner.chips += winnings
+        self.last_pot = self.pot
         self.pot = 0
         self.game_over = True
         return f"{winner.name} wins {winnings} chips!"

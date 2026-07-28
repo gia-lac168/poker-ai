@@ -31,17 +31,29 @@ def start():
         stats["chip_history"].append(you.chips)
         if winner_message and "You" in winner_message:
             stats["hands_won"] += 1
-        if game.pot > stats["biggest_pot"]:
-            stats["biggest_pot"] = game.pot
+            if game.last_pot > stats["biggest_pot"]:
+                stats["biggest_pot"] = game.last_pot
+
+        # keep existing players and their chips!
+        existing_chips = {p.name: p.chips for p in game.players}
+        num_bots = len([p for p in game.players if p.is_bot])
+
+        def get_chips(name):
+            chips = existing_chips.get(name, 1000)
+            return 1000 if chips <= 0 else chips  # rebuy if broke
+
+        players = [Player("You", [], get_chips("You"))]
+        for i in range(num_bots):
+            name = f"Bot{i + 1}"
+            players.append(Player(name, [], get_chips(name), is_bot=True))
+    else:
+        num_bots = int(request.form.get("num_bots", 2))
+        players = [Player("You", [], 1000)]
+        for i in range(num_bots):
+            players.append(Player(f"Bot{i + 1}", [], 1000, is_bot=True))
 
     action_log = []
     winner_message = None
-    num_bots = int(request.form.get("num_bots", 2))
-    players = [Player("You", [], 1000)]
-
-    for i in range (num_bots):
-        players.append(Player(f"Bot{i+1}", [], 1000, is_bot=True))
-
     game = Game(players)
     game.start_hand()
     return redirect(url_for("play"))
