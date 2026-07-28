@@ -9,13 +9,31 @@ game: Game = None
 action_log = []
 winner_message = None
 
+stats = {
+    "hands_played": 0,
+    "hands_won": 0,
+    "biggest_pot": 0,
+    "chip_history": [1000]
+}
+
 @app.route("/")
 def index():
-    return render_template('index.html', game=None)
+    return render_template('index.html', game=None, stats=stats)
 
 @app.route("/start", methods=['POST'])
 def start():
-    global game, action_log, winner_message
+    global game, action_log, winner_message, stats
+
+    # update stats from previous hand if exists
+    if game is not None:
+        stats["hands_played"] += 1
+        you = next(p for p in game.players if not p.is_bot)
+        stats["chip_history"].append(you.chips)
+        if winner_message and "You" in winner_message:
+            stats["hands_won"] += 1
+        if game.pot > stats["biggest_pot"]:
+            stats["biggest_pot"] = game.pot
+
     action_log = []
     winner_message = None
     num_bots = int(request.form.get("num_bots", 2))
@@ -40,7 +58,7 @@ def play():
         from montecarlo import estimate_win_probability
         active_opponents = len([p for p in game.players if not p.is_folded and p != current_player])
         win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents, num_simulations=2000):.1%}"
-    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob, current_round_name=current_round_name, action_log=action_log, winner_message=winner_message, game_over=game.game_over)
+    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob, current_round_name=current_round_name, action_log=action_log, winner_message=winner_message, game_over=game.game_over, stats=stats)
 
 @app.route("/action", methods=['POST'])
 def action():

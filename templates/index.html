@@ -6,6 +6,18 @@
 </head>
 <body>
 
+<!-- Stats Dashboard -->
+{% if stats and stats.hands_played > 0 %}
+<div class="stats">
+    <h3> Player's Stats:</h3>
+    <p> Hands Played: {{ stats.hands_played }}</p>
+    <p> Hands Won: {{ stats.hands_won }}</p>
+    <p> Win Rate: {{ "%.0f"|format(stats.hands_won / stats.hands_played * 100) }}%</p>
+    <p> Biggest Pot: {{ stats.biggest_pot }} chips</p>
+    <p> Current Chips: {{ stats.chip_history[-1] }}</p>
+</div>
+{% endif %}
+
 {% if game is none %}
 <div class="setup">
     <h1>Poker AI 🃏</h1>
