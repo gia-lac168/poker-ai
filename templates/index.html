@@ -109,11 +109,31 @@
         {% elif current_player and current_player.is_bot %}
             <p>⏳ Waiting for {{ current_player.name }}...</p>
         {% endif %}
-
     {% endif %}
+
+    <!-- Action Log -->
+    <div class="log">
+        <h3>Action Log
+            <button onclick="toggleReasoning()" style="font-size:12px; margin-left:10px">
+                Show/Hide Bot Reasoning
+            </button>
+        </h3>
+        {% for msg in action_log %}
+            {% if '→' in msg %}
+                {# split message and reasoning #}
+                <p>{{ msg.split('→')[0] }}</p>
+                <p class="reasoning" style="display:none; color: #aaa; font-size: 12px; margin-left: 20px">
+                    → {{ msg.split('→')[1] }}
+                </p>
+            {% else %}
+                <p>{{ msg }}</p>
+            {% endif %}
+        {% endfor %}
+    </div>
 
 </div>
 
+<!-- Auto-refresh when waiting for bot (Jinja2 + JS) -->
 {% if current_player and current_player.is_bot and not winner_message %}
 <script>
     setTimeout(function(){
@@ -123,43 +143,19 @@
 </script>
 {% endif %}
 
+<!-- Regular JavaScript functions (no Jinja2) -->
 <script>
     function toggleProb(){
         var prob = document.getElementById("prob");
-        if (prob.style.display == "none"){
-            prob.style.display = "inline";
-        } else {
-            prob.style.display = "none";
-        }
+        prob.style.display = prob.style.display === "none" ? "inline" : "none";
     }
-</script>
 
-<div class="log">
-    <h3>Action Log
-        <button onclick="toggleReasoning()" style="font-size:12px; margin-left:10px">
-            Show/Hide Bot Reasoning
-        </button>
-    </h3>
-    {% for msg in action_log %}
-        {% if '→' in msg %}
-            {# split message and reasoning #}
-            <p>{{ msg.split('→')[0] }}</p>
-            <p class="reasoning" style="display:none; color: #aaa; font-size: 12px; margin-left: 20px">
-                → {{ msg.split('→')[1] }}
-            </p>
-        {% else %}
-            <p>{{ msg }}</p>
-        {% endif %}
-    {% endfor %}
-</div>
-
-<script>
-function toggleReasoning() {
-    var elements = document.querySelectorAll('.reasoning');
-    elements.forEach(function(el) {
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    });
-}
+    function toggleReasoning() {
+        var elements = document.querySelectorAll('.reasoning');
+        elements.forEach(function(el) {
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        });
+    }
 </script>
 
 {% endif %}

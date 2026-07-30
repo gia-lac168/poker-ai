@@ -59,7 +59,6 @@ def is_flush(cards):
     return len(set(suits)) == 1
 
 def is_straight(cards):
-    #rank_values = {"2":2, "3":3, "4":4, "5":5, "6":6, "7":7, "8":8, "9":9, "10":10, "J":11, "Q":12, "K":13, "A":14}
     ranks = sorted(set(RANK_VALUES[card.rank] for card in cards))
 
     if set(ranks) == {14, 2, 3, 4, 5}:
@@ -74,6 +73,5 @@ def is_straight_flush(cards):
     return is_flush(cards) and is_straight(cards)
 
 def is_royal_flush(cards):
-    #rank_values = {"2":2, "3":3, "4":4, "5":5, "6":6, "7":7, "8":8, "9":9, "10":10, "J":11, "Q":12, "K":13, "A":14}
     hand = set(RANK_VALUES[card.rank] for card in cards)
     return is_flush(cards) and hand == {10, 11, 12, 13, 14}

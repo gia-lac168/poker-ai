@@ -8,4 +8,4 @@ players = [
 ]
 
 game = Game(players)
-game.play_hand()
+game.start_hand()

@@ -1,6 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request
 from player import Player
 from game import Game
+from ai import bot_action
+from montecarlo import estimate_win_probability
 
 app = Flask(__name__)
 app.secret_key = "poker-ai-secret-key"
@@ -67,7 +69,6 @@ def play():
     round_names = {0: "Pre-flop", 1: "Flop", 2: "Turn", 3: "River", 4: "Showdown"}
     current_round_name = round_names.get(game.current_round, "Pre-flop")
     if current_player and not current_player.is_bot:
-        from montecarlo import estimate_win_probability
         active_opponents = len([p for p in game.players if not p.is_folded and p != current_player])
         win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents, num_simulations=2000):.1%}"
     return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob,
@@ -110,7 +111,6 @@ def action():
                     break  # someone can act, stop
 
         elif current.is_bot:
-            from ai import bot_action
             current_pot = game.pot + sum(p.total_bet_this_round for p in game.players)
             active_opponents = len([p for p in game.players if not p.is_folded and p != current])
             bot_act, bot_amount, bot_reasoning = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
@@ -142,7 +142,6 @@ def advance():
             else:
                 break
         elif current.is_bot:
-            from ai import bot_action
             current_pot = game.pot + sum(p.total_bet_this_round for p in game.players)
             active_opponents = len([p for p in game.players if not p.is_folded and p != current])
             bot_act, bot_amount, bot_reasoning = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)

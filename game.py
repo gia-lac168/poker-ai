@@ -40,14 +40,12 @@ class Game:
         sb_player.chips -= self.small_blind
         sb_player.total_bet_this_round = self.small_blind
         self.pot += sb_player.total_bet_this_round
-        print(f"{sb_player.name} posts small blind: {self.small_blind}")
 
         # post big blind
         bb_player.chips -= self.big_blind
         bb_player.total_bet_this_round = self.big_blind
         self.pot += self.big_blind
         self.highest_bet = self.big_blind
-        print(f"{bb_player.name} posts big blind: {self.big_blind}")
 
     def active_players(self):
         return [p for p in self.players if not p.is_folded]
