@@ -135,11 +135,32 @@
 </script>
 
 <div class="log">
-    <h3>Action Log</h3>
+    <h3>Action Log
+        <button onclick="toggleReasoning()" style="font-size:12px; margin-left:10px">
+            Show/Hide Bot Reasoning
+        </button>
+    </h3>
     {% for msg in action_log %}
-        <p>{{ msg }}</p>
+        {% if '→' in msg %}
+            {# split message and reasoning #}
+            <p>{{ msg.split('→')[0] }}</p>
+            <p class="reasoning" style="display:none; color: #aaa; font-size: 12px; margin-left: 20px">
+                → {{ msg.split('→')[1] }}
+            </p>
+        {% else %}
+            <p>{{ msg }}</p>
+        {% endif %}
     {% endfor %}
 </div>
+
+<script>
+function toggleReasoning() {
+    var elements = document.querySelectorAll('.reasoning');
+    elements.forEach(function(el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    });
+}
+</script>
 
 {% endif %}
 

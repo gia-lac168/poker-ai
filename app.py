@@ -70,7 +70,9 @@ def play():
         from montecarlo import estimate_win_probability
         active_opponents = len([p for p in game.players if not p.is_folded and p != current_player])
         win_prob = f"{estimate_win_probability(current_player.hole_cards, game.community_cards, active_opponents, num_simulations=2000):.1%}"
-    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob, current_round_name=current_round_name, action_log=action_log, winner_message=winner_message, game_over=game.game_over, stats=stats)
+    return render_template("index.html", game=game, current_player=current_player, win_prob=win_prob,
+                           current_round_name=current_round_name, action_log=action_log, winner_message=winner_message,
+                           game_over=game.game_over, stats=stats)
 
 @app.route("/action", methods=['POST'])
 def action():
@@ -111,9 +113,9 @@ def action():
             from ai import bot_action
             current_pot = game.pot + sum(p.total_bet_this_round for p in game.players)
             active_opponents = len([p for p in game.players if not p.is_folded and p != current])
-            bot_act, bot_amount = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
+            bot_act, bot_amount, bot_reasoning = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
             msg = game.process_action(current, bot_act.lower(), bot_amount)
-            action_log.append(msg)
+            action_log.append(f"{msg} → {bot_reasoning}")
         else:
             # human's turn — stop and show the page
             break
@@ -143,9 +145,9 @@ def advance():
             from ai import bot_action
             current_pot = game.pot + sum(p.total_bet_this_round for p in game.players)
             active_opponents = len([p for p in game.players if not p.is_folded and p != current])
-            bot_act, bot_amount = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
+            bot_act, bot_amount, bot_reasoning = bot_action(current, game.highest_bet, game.community_cards, active_opponents, current_pot)
             msg = game.process_action(current, bot_act.lower(), bot_amount)
-            action_log.append(msg)
+            action_log.append(f"{msg} → {bot_reasoning}")
         else:
             break
 
